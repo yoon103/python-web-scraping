@@ -1,22 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 
-indeed_result = requests.get("https://www.indeed.com/jobs?q=python&limit=50")
+LIMIT = 50
+URL = f"https://www.indeed.com/jobs?q=python&limit={LIMIT}"
 
-# print(indeed_result.text)
+def extract_indeed_pages():
+    result = requests.get(URL)
+    soup = BeautifulSoup(result.text, 'html.parser')
+    pagination = soup.find('div', {"class":"pagination"})
+    links = pagination.find_all('a')  # list
+    pages = []
+    for link in links[:-1]:  # 맨 마지막에는 next이기 때문에 제외함.
+        # print(link.find('span'))
+        # pages.append(link.find("span").string)
+        pages.append(int(link.string)) # 특정 요소 하위의 요소에 string이 오직 하나만 있다면 굳이 하위 요소로 가지 않아도 beautifulsoup이 알아서 string을 찾아줌
+    #
+    max_page = pages[-1]
+    return max_page
 
-indeed_soup = BeautifulSoup(indeed_result.text, 'html.parser')
-# print(indeed_soup)
 
-pagination = indeed_soup.find('div', {"class":"pagination"})
-# print(pagination)
-
-links = pagination.find_all('a')  # list
-# print(pages)
-pages = []
-for link in links[:-1]:  # 맨 마지막에는 next이기 때문에 제외함.
-    # print(link.find('span'))
-    # pages.append(link.find("span").string)
-    pages.append(int(link.string)) # 특정 요소 하위의 요소에 string이 오직 하나만 있다면 굳이 하위 요소로 가지 않아도 beautifulsoup이 알아서 string을 찾아줌
-
-max_page = pages[-1]
+def extract_indeed_jobs(last_page):
+    jobs = []
+    for page in range(last_page):
+        result = requests.get(f"{URL}&start={page*LIMIT}")
+        print(result.status_code)
+    return jobs
